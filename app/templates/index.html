@@ -1,0 +1,2366 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DiagnoLearn — Prédiction des Difficultés d'Apprentissage</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="icon" href="/static/icon.png" type="image/png">
+    <style>
+          /* ═══════════════════════════════════════════════════════VARIABLES & RESET ═══════════════════════════════════════════════════════ */
+          :root {
+            --bg: #f7f3ff;
+            --surface: #ffffff;
+            --surface2: #f3edff;
+            --border: rgba(109, 40, 217, 0.12);
+            --border-hover: rgba(124, 58, 237, 0.35);
+            --text: #21143d;
+            --text-muted: #77658f;
+            --text-dim: #57456f;
+            --accent: #7c3aed;
+            --accent2: #a78bfa;
+            --green: #10b981;
+            --yellow: #f59e0b;
+            --red: #ef4444;
+            --purple: #8b5cf6;
+            --font-display: "Instrument Sans", sans-serif;
+            --font-body: "Instrument Sans", sans-serif;
+            --radius: 12px;
+            --radius-lg: 20px;
+            --shadow: 0 18px 48px rgba(92, 45, 145, 0.14);
+          }
+
+          *,
+          *::before,
+          *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+          }
+
+          body {
+            font-family: var(--font-body);
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+            padding-left: 280px;
+          }
+
+          /* ═══════════════════════════════════════════════════════ BACKGROUND EFFECT ═══════════════════════════════════════════════════════ */
+          body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background:
+              linear-gradient(135deg, rgba(124, 58, 237, 0.08), transparent 45%),
+              radial-gradient(
+                ellipse 80% 50% at 20% 10%,
+                rgba(167, 139, 250, 0.18) 0%,
+                transparent 60%
+              ),
+              radial-gradient(
+                ellipse 60% 40% at 90% 80%,
+                rgba(216, 180, 254, 0.22) 0%,
+                transparent 60%
+              );
+            pointer-events: none;
+            z-index: 0;
+          }
+
+          /* ═══════════════════════════════════════════════════════ SIDEBAR ═══════════════════════════════════════════════════════ */
+          .sidebar {
+            position: fixed;
+            inset: 0 auto 0 0;
+            z-index: 20;
+            width: 280px;
+            padding: 24px 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 28px;
+            background: linear-gradient(
+              180deg,
+              rgba(255, 255, 255, 0.94),
+              rgba(244, 237, 255, 0.92)
+            );
+            border-right: 1px solid var(--border);
+            box-shadow: 18px 0 50px rgba(88, 28, 135, 0.08);
+            backdrop-filter: blur(18px);
+          }
+
+          .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 4px 8px 16px;
+            border-bottom: 1px solid var(--border);
+          }
+
+          .brand-mark {
+            width: 46px;
+            height: 46px;
+            border-radius: 14px;
+            display: grid;
+            place-items: center;
+            color: #fff;
+            font-weight: 800;
+            background: linear-gradient(135deg, #7c3aed, #c084fc);
+            box-shadow: 0 12px 24px rgba(124, 58, 237, 0.28);
+          }
+
+          .logo {
+            font-family: var(--font-display);
+            font-weight: 800;
+            font-size: 1.25rem;
+            background: linear-gradient(135deg, #351865, #9333ea);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 0;
+          }
+
+          .logo span {
+            font-weight: 400;
+            -webkit-text-fill-color: var(--text-muted);
+          }
+
+          .brand-sub {
+            display: block;
+            margin-top: 2px;
+            font-size: 0.72rem;
+            color: var(--text-muted);
+          }
+
+          .side-nav {
+            display: grid;
+            gap: 12px;
+          }
+
+          .side-nav a {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            min-height: 56px;
+            padding: 0 16px;
+            border-radius: 16px;
+            color: var(--text-dim);
+            text-decoration: none;
+            font-size: 0.96rem;
+            font-weight: 700;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+          }
+
+          .side-nav a:hover {
+            color: var(--accent);
+            background: rgba(124, 58, 237, 0.09);
+            border-color: rgba(124, 58, 237, 0.12);
+            transform: translateX(3px);
+          }
+
+          .side-nav a.active {
+            color: #fff;
+            background: linear-gradient(135deg, #7c3aed, #a78bfa);
+            box-shadow: 0 14px 28px rgba(124, 58, 237, 0.22);
+          }
+
+          .nav-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 13px;
+            display: grid;
+            place-items: center;
+            background: rgba(124, 58, 237, 0.1);
+            flex: 0 0 38px;
+          }
+
+          .nav-icon svg {
+            width: 22px;
+            height: 22px;
+            stroke: currentColor;
+            stroke-width: 2;
+            fill: none;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+          }
+
+          .side-nav a.active .nav-icon {
+            background: rgba(255, 255, 255, 0.2);
+          }
+
+          .sidebar-footer {
+            margin-top: auto;
+            padding: 14px;
+            border-radius: 16px;
+            background: rgba(124, 58, 237, 0.08);
+            color: var(--text-muted);
+            font-size: 0.78rem;
+            line-height: 1.45;
+          }
+
+          /* ═══════════════════════════════════════════════════════ HERO ═══════════════════════════════════════════════════════ */
+          .hero {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            padding: 34px 32px 24px;
+          }
+
+          .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 16px;
+            border-radius: 100px;
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--accent);
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+          }
+
+          .badge-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--accent);
+            animation: pulse 2s infinite;
+          }
+
+          @keyframes pulse {
+            0%,
+            100% {
+              opacity: 1;
+              transform: scale(1);
+            }
+            50% {
+              opacity: 0.5;
+              transform: scale(0.8);
+            }
+          }
+
+          h1 {
+            font-family: var(--font-body);
+            font-size: clamp(1.75rem, 3vw, 2.55rem);
+            font-weight: 700;
+            line-height: 1.22;
+            letter-spacing: 0;
+            margin-bottom: 16px;
+            width: 100%;
+            max-width: none;
+            margin-left: auto;
+            margin-right: auto;
+            color: #24133f;
+          }
+
+          h1 em {
+            font-style: normal;
+            color: var(--accent);
+            background: none;
+            -webkit-text-fill-color: currentColor;
+          }
+
+          .hero-sub {
+            color: var(--text-dim);
+            font-size: 1rem;
+            max-width: 520px;
+            margin: 0 auto;
+            line-height: 1.6;
+          }
+
+          /* ═══════════════════════════════════════════════════════ FORM CONTAINER ═══════════════════════════════════════════════════════ */
+          .form-container {
+            position: relative;
+            z-index: 1;
+            max-width: 1080px;
+            margin: 0 auto 48px;
+            padding: 0 28px;
+          }
+
+          .progress-bar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 32px;
+          }
+
+          .step-dot {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: color 0.2s;
+          }
+
+          .step-dot.active {
+            color: var(--accent);
+          }
+          .step-dot.done {
+            color: var(--green);
+          }
+
+          .step-circle {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: 2px solid currentColor;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: 700;
+            transition: all 0.3s;
+          }
+
+          .step-dot.active .step-circle {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: white;
+          }
+
+          .step-dot.done .step-circle {
+            background: var(--green);
+            border-color: var(--green);
+            color: white;
+          }
+
+          .step-line {
+            width: 40px;
+            height: 1px;
+            background: var(--border);
+          }
+
+          /* ═══════════════════════════════════════════════════════ CARDS / SECTIONS ═══════════════════════════════════════════════════════ */
+          .section-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 32px;
+            margin-bottom: 16px;
+            display: none;
+            animation: slideIn 0.35s ease;
+            box-shadow: var(--shadow);
+          }
+
+          .section-card.active {
+            display: block;
+          }
+
+          @keyframes slideIn {
+            from {
+              opacity: 0;
+              transform: translateY(12px);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
+
+          .section-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            justify-content: center;
+            padding: 9px 18px;
+            border-radius: 100px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            margin: 0 auto 14px;
+            width: fit-content;
+          }
+
+          .tag-profile {
+            background: rgba(139, 92, 246, 0.12);
+            color: var(--purple);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+          }
+          .tag-env {
+            background: rgba(6, 182, 212, 0.1);
+            color: var(--accent2);
+            border: 1px solid rgba(6, 182, 212, 0.2);
+          }
+          .tag-comp {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--yellow);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+          }
+          .tag-academic {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--accent);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+          }
+          .tag-test {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--green);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+          }
+          .tag-behavior {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--red);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+          }
+          .tag-motivation {
+            background: rgba(251, 191, 36, 0.1);
+            color: #fbbf24;
+            border: 1px solid rgba(251, 191, 36, 0.2);
+          }
+
+          .section-title {
+            font-family: var(--font-body);
+            font-size: clamp(1.35rem, 2vw, 1.75rem) !important;
+            font-weight: 800;
+            margin: 0 auto 12px !important;
+            letter-spacing: 0;
+            text-align: center;
+            color: #4c1d95;
+            position: relative;
+            padding-bottom: 14px;
+            max-width: 760px;
+          }
+
+          .section-title::after {
+            content: "";
+            position: absolute;
+            left: 50%;
+            bottom: 0;
+            width: 84px;
+            height: 3px;
+            border-radius: 999px;
+            transform: translateX(-50%);
+            background: linear-gradient(
+              90deg,
+              transparent,
+              var(--accent),
+              var(--accent2),
+              transparent
+            );
+          }
+
+          .section-desc {
+            font-size: 0.88rem;
+            color: var(--text-muted);
+            margin: 0 auto 30px;
+            line-height: 1.6;
+            text-align: center;
+            max-width: 720px;
+          }
+
+          /* ═══════════════════════════════════════════════════════ FORM FIELDS ═══════════════════════════════════════════════════════ */
+          .fields-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+          }
+
+          .field-full {
+            grid-column: 1 / -1;
+          }
+
+          .field-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+          }
+
+          .field-group.has-error .toggle-btn,
+          .field-group.has-error .scale-btn,
+          .field-group.has-error .num-input {
+            border-color: var(--red);
+          }
+
+          .field-group.is-valid .toggle-btn.selected,
+          .field-group.is-valid .scale-btn.selected,
+          .field-group.is-valid .num-input {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.12);
+          }
+
+          .field-error {
+            display: none;
+            color: var(--red);
+            font-size: 0.74rem;
+            font-weight: 600;
+            line-height: 1.35;
+          }
+
+          .field-group.has-error .field-error {
+            display: block;
+          }
+
+          label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: var(--text-dim);
+            letter-spacing: 0;
+          }
+
+          label .field-var {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            font-weight: 400;
+            margin-left: 6px;
+            font-family: "Courier New", monospace;
+          }
+
+          /* Toggle buttons */
+          .toggle-group {
+            display: flex;
+            gap: 8px;
+          }
+
+          .toggle-btn {
+            flex: 1;
+            min-height: 48px;
+            padding: 12px 16px;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            color: var(--text-muted);
+            font-family: var(--font-body);
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+          }
+
+          .toggle-btn:hover {
+            border-color: var(--border-hover);
+            color: var(--text);
+          }
+          .toggle-btn.selected {
+            background: rgba(124, 58, 237, 0.12);
+            border-color: var(--accent);
+            color: var(--accent);
+          }
+
+          /* Scale buttons (0-4 or 1-5) */
+          .scale-group {
+            display: flex;
+            gap: 6px;
+          }
+
+          .scale-btn {
+            flex: 1;
+            min-height: 58px;
+            padding: 12px 6px;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-muted);
+            font-family: var(--font-body);
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+          }
+
+          .scale-btn span {
+            font-size: 0.65rem;
+            font-weight: 400;
+            color: var(--text-muted);
+          }
+          .scale-btn:hover {
+            border-color: var(--border-hover);
+          }
+          .scale-btn.selected {
+            background: rgba(124, 58, 237, 0.12);
+            border-color: var(--accent);
+            color: var(--accent);
+          }
+          .scale-btn.selected span {
+            color: rgba(124, 58, 237, 0.78);
+          }
+
+          /* Number input */
+          .num-input {
+            width: 100%;
+            min-height: 50px;
+            padding: 12px 16px;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            color: var(--text);
+            font-family: var(--font-body);
+            font-size: 0.94rem;
+            transition:
+              border-color 0.2s,
+              box-shadow 0.2s,
+              background 0.2s;
+            appearance: none;
+            box-shadow: 0 8px 20px rgba(92, 45, 145, 0.05);
+          }
+
+          .num-input:focus {
+            outline: none;
+            border-color: var(--accent);
+            background: #fff;
+            box-shadow:
+              0 0 0 4px rgba(124, 58, 237, 0.12),
+              0 12px 26px rgba(92, 45, 145, 0.1);
+          }
+
+          .input-suffix {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            position: relative;
+          }
+
+          .input-suffix .num-input {
+            flex: 1;
+          }
+          .input-suffix.has-icon .num-input {
+            padding-left: 50px;
+          }
+
+          .field-input-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 24px;
+            height: 24px;
+            border-radius: 9px;
+            display: grid;
+            place-items: center;
+            color: var(--accent);
+            background: rgba(124, 58, 237, 0.1);
+            pointer-events: none;
+          }
+
+          .field-input-icon svg {
+            width: 15px;
+            height: 15px;
+            stroke: currentColor;
+            stroke-width: 2.2;
+            fill: none;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+          }
+
+          .field-choice-icon {
+            width: 28px;
+            height: 28px;
+            margin: 0;
+            border-radius: 11px;
+            display: inline-grid;
+            place-items: center;
+            color: var(--accent);
+            background: rgba(124, 58, 237, 0.1);
+            flex: 0 0 28px;
+          }
+
+          .field-choice-icon svg {
+            width: 17px;
+            height: 17px;
+            stroke: currentColor;
+            stroke-width: 2.1;
+            fill: none;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+          }
+          .input-suffix .unit {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            white-space: nowrap;
+            padding: 11px 0;
+          }
+
+          /* ═══════════════════════════════════════════════════════ NAVIGATION BUTTONS ═══════════════════════════════════════════════════════ */
+          .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+          }
+
+          .btn {
+            padding: 12px 28px;
+            border-radius: var(--radius);
+            font-family: var(--font-body);
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+          }
+
+          .btn-ghost {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+          }
+          .btn-ghost:hover {
+            border-color: var(--border-hover);
+            color: var(--text);
+          }
+
+          .btn-primary {
+            background: linear-gradient(135deg, #7c3aed, #a78bfa);
+            color: white;
+            box-shadow: 0 12px 26px rgba(124, 58, 237, 0.24);
+          }
+          .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 16px 30px rgba(124, 58, 237, 0.3);
+          }
+          .btn-primary:active {
+            transform: translateY(0);
+          }
+
+          .btn-success {
+            background: linear-gradient(135deg, #6d28d9, #a855f7);
+            color: white;
+            box-shadow: 0 12px 26px rgba(124, 58, 237, 0.24);
+          }
+          .btn-success:hover {
+            transform: translateY(-1px);
+          }
+
+          .step-indicator {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+          }
+
+          /* ═══════════════════════════════════════════════════════ RESULT PANEL ═══════════════════════════════════════════════════════ */
+          #result-panel {
+            display: none;
+            max-width: 1080px;
+            margin: 0 auto 80px;
+            padding: 0 28px;
+            animation: slideIn 0.5s ease;
+          }
+
+          .result-header {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 36px;
+            text-align: center;
+            margin-bottom: 16px;
+            position: relative;
+            overflow: hidden;
+          }
+
+          .result-header::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(
+              ellipse 60% 60% at 50% 0%,
+              var(--result-color, rgba(59, 130, 246, 0.1)),
+              transparent
+            );
+            pointer-events: none;
+          }
+
+          .result-emoji {
+            font-size: 3rem;
+            margin-bottom: 12px;
+            display: block;
+          }
+
+          .risk-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 20px;
+            border-radius: 100px;
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 1rem;
+            margin-bottom: 16px;
+            border: 2px solid currentColor;
+            background: #fff;
+            box-shadow: 0 10px 24px rgba(92, 45, 145, 0.12);
+          }
+
+          .risk-badge.risk-low {
+            color: var(--green);
+            border-color: rgba(16, 185, 129, 0.45);
+            background: rgba(16, 185, 129, 0.1);
+          }
+
+          .risk-badge.risk-medium {
+            color: var(--yellow);
+            border-color: rgba(245, 158, 11, 0.5);
+            background: rgba(245, 158, 11, 0.12);
+          }
+
+          .risk-badge.risk-high {
+            color: var(--red);
+            border-color: rgba(239, 68, 68, 0.5);
+            background: rgba(239, 68, 68, 0.1);
+          }
+
+          .result-prob {
+            font-family: var(--font-display);
+            font-size: 3.5rem;
+            font-weight: 800;
+            letter-spacing: -0.04em;
+            line-height: 1;
+            margin-bottom: 8px;
+          }
+
+          .result-prob-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 24px;
+          }
+
+          /* Probability bar */
+          .prob-bar {
+            max-width: 320px;
+            margin: 0 auto 24px;
+          }
+
+          .prob-track {
+            height: 8px;
+            background: var(--surface2);
+            border-radius: 100px;
+            overflow: hidden;
+          }
+
+          .prob-fill {
+            height: 100%;
+            border-radius: 100px;
+            transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+            width: 0;
+          }
+
+          /* ═══════════════════════════════════════════════════════ FACTORS GRID ═══════════════════════════════════════════════════════ */
+          .result-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 16px;
+          }
+
+          .factors-card,
+          .reco-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 24px;
+            box-shadow: var(--shadow);
+          }
+
+          .card-title {
+            font-family: var(--font-display);
+            font-size: 0.95rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+          }
+
+          .factor-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            border: 1px solid var(--border);
+            background: var(--surface2);
+            font-size: 0.82rem;
+          }
+
+          .factor-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-top: 3px;
+            flex-shrink: 0;
+          }
+          .factor-dot.high {
+            background: var(--red);
+          }
+          .factor-dot.medium {
+            background: var(--yellow);
+          }
+          .factor-dot.low {
+            background: var(--green);
+          }
+
+          .factor-text {
+            flex: 1;
+            line-height: 1.4;
+          }
+          .factor-val {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+          }
+
+          /* ═══════════════════════════════════════════════════════ RECOMMENDATIONS ═══════════════════════════════════════════════════════ */
+          .reco-card {
+            grid-column: 1 / -1;
+          }
+
+          .reco-item {
+            display: flex;
+            gap: 14px;
+            padding: 16px;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            margin-bottom: 10px;
+            background: var(--surface2);
+            transition: border-color 0.2s;
+          }
+
+          .reco-item:hover {
+            border-color: var(--border-hover);
+          }
+          .reco-item:last-child {
+            margin-bottom: 0;
+          }
+
+          .reco-num {
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            background: rgba(59, 130, 246, 0.15);
+            color: var(--accent);
+            font-size: 0.75rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+          }
+
+          .reco-content h4 {
+            font-family: var(--font-display);
+            font-size: 0.875rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+          }
+
+          .reco-content p {
+            font-size: 0.86rem;
+            color: var(--text-dim);
+            line-height: 1.65;
+          }
+
+          .reco-priority {
+            display: inline-block;
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            padding: 2px 8px;
+            border-radius: 100px;
+            margin-top: 6px;
+          }
+          .reco-priority.haute {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--red);
+          }
+          .reco-priority.moyenne {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--yellow);
+          }
+          .reco-priority.faible {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--green);
+          }
+
+          /* ═══════════════════════════════════════════════════════ ACTION BUTTONS (after result) ═══════════════════════════════════════════════════════ */
+          .result-actions {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+          }
+
+          /* ═══════════════════════════════════════════════════════ LOADING ═══════════════════════════════════════════════════════ */
+          #loading-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(10, 14, 26, 0.85);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 16px;
+            backdrop-filter: blur(4px);
+          }
+
+          #loading-overlay.show {
+            display: flex;
+          }
+
+          .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+          }
+
+          @keyframes spin {
+            to {
+              transform: rotate(360deg);
+            }
+          }
+
+          .loading-text {
+            font-family: var(--font-display);
+            font-size: 0.9rem;
+            color: var(--text-muted);
+          }
+
+          /* Footer */
+          .about-footer {
+            margin-top: 48px;
+            padding-top: 20px;
+            text-align: center;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            border-top: 1px solid var(--border);
+          }
+
+          /* ═══════════════════════════════════════════════════════ RESPONSIVE ═══════════════════════════════════════════════════════ */
+          @media (max-width: 640px) {
+            body {
+              padding-left: 0;
+              padding-bottom: 76px;
+            }
+            .sidebar {
+              top: auto;
+              right: 0;
+              width: auto;
+              height: 72px;
+              padding: 8px 10px;
+              border-right: 0;
+              border-top: 1px solid var(--border);
+              box-shadow: 0 -14px 30px rgba(88, 28, 135, 0.12);
+            }
+            .brand,
+            .sidebar-footer {
+              display: none;
+            }
+            .side-nav {
+              grid-template-columns: repeat(4, 1fr);
+              gap: 6px;
+            }
+            .side-nav a {
+              min-height: 56px;
+              padding: 6px 4px;
+              justify-content: center;
+              flex-direction: column;
+              gap: 4px;
+              font-size: 0.68rem;
+              border-radius: 12px;
+            }
+            .nav-icon {
+              width: 24px;
+              height: 24px;
+              border-radius: 8px;
+              flex-basis: 24px;
+            }
+            .nav-icon svg {
+              width: 16px;
+              height: 16px;
+            }
+            .hero {
+              padding: 26px 12px 18px;
+            }
+            .form-container,
+            #result-panel {
+              padding: 0 12px;
+            }
+            .fields-grid {
+              grid-template-columns: 1fr;
+            }
+            .result-grid {
+              grid-template-columns: 1fr;
+            }
+            .scale-group {
+              flex-wrap: wrap;
+            }
+            .scale-btn {
+              min-width: calc(20% - 5px);
+            }
+            .section-card {
+              padding: 22px;
+            }
+            .section-title {
+              font-size: 1.2rem !important;
+            }
+            .section-desc {
+              font-size: 0.82rem;
+            }
+            .nav-buttons {
+              gap: 10px;
+              flex-wrap: wrap;
+            }
+            .btn {
+              width: 100%;
+              text-align: center;
+            }
+            .step-indicator {
+              order: -1;
+              width: 100%;
+              text-align: center;
+            }
+          }
+
+          @media (min-width: 641px) and (max-width: 1024px) {
+            body {
+              padding-left: 230px;
+            }
+            .sidebar {
+              width: 230px;
+            }
+            .side-nav a {
+              font-size: 0.86rem;
+            }
+            .hero {
+              padding-left: 24px;
+              padding-right: 24px;
+            }
+          }
+    </style>
+  </head>
+  <body>
+    <!-- ─── SIDEBAR ────────────────────────────────────────── -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">DL</div>
+        <div>
+          <div class="logo">Diagno<span>Learn</span></div>
+        </div>
+      </div>
+      <nav class="side-nav" aria-label="Navigation principale">
+        <a href="/dashboard#overview"
+          ><span class="nav-icon"
+            ><svg viewBox="0 0 24 24">
+              <path d="M4 13h6V4H4z" />
+              <path d="M14 20h6V4h-6z" />
+              <path d="M4 20h6v-3H4z" /></svg></span
+          ><span>Dashboard</span></a
+        >
+        <a href="/" class="active"
+          ><span class="nav-icon"
+            ><svg viewBox="0 0 24 24">
+              <path d="M3 11.5 12 4l9 7.5" />
+              <path d="M5 10.5V20h14v-9.5" />
+              <path d="M9 20v-6h6v6" /></svg></span
+          ><span>Accueil</span></a
+        >
+        <a href="/models"
+          ><span class="nav-icon"
+            ><svg viewBox="0 0 24 24">
+              <path d="M12 3v18" />
+              <path d="M5 7h14" />
+              <path d="M7 7l-3 6h6z" />
+              <path d="M17 7l-3 6h6z" />
+              <path d="M8 21h8" /></svg></span
+          ><span>Modèles entraînés</span></a
+        >
+        <a href="/about"
+          ><span class="nav-icon"
+            ><svg viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="9" />
+              <path d="M12 10v6" />
+              <path d="M12 7h.01" /></svg></span
+          ><span>À propos</span></a
+        >
+      </nav>
+      <div class="sidebar-footer">
+        Système intelligent d'aide au diagnostic pédagogique.
+      </div>
+    </aside>
+
+    <!-- ─── HERO ───────────────────────────────────────────── -->
+    <section class="hero">
+      <h1>Prédiction <em>précoce</em> des difficultés d'apprentissage</h1>
+      <p class="hero-sub">
+        Remplissez le formulaire diagnostique pour évaluer le risque qu'un
+        apprenant rencontre des difficultés en informatique au collège.
+      </p>
+    </section>
+
+    <!-- ─── FORM ────────────────────────────────────────────── -->
+    <div class="form-container" id="form-container">
+      <!-- Barre de progression -->
+      <div class="progress-bar">
+        <div class="step-dot active" id="step-1-dot" onclick="goToStep(1)">
+          <div class="step-circle">1</div>
+          Profil
+        </div>
+        <div class="step-line"></div>
+        <div class="step-dot" id="step-2-dot" onclick="goToStep(2)">
+          <div class="step-circle">2</div>
+          Numérique
+        </div>
+        <div class="step-line"></div>
+        <div class="step-dot" id="step-3-dot" onclick="goToStep(3)">
+          <div class="step-circle">3</div>
+          Académique
+        </div>
+        <div class="step-line"></div>
+        <div class="step-dot" id="step-4-dot" onclick="goToStep(4)">
+          <div class="step-circle">4</div>
+          Test & Comportement
+        </div>
+      </div>
+
+      <!-- ── ÉTAPE 1 : Profil ──────────────────────────────── -->
+      <div class="section-card active" id="step-1">
+        <!-- Profil général -->
+        <div class="section-tag tag-profile">👤 Profil de l'élève</div>
+        <div class="section-title">Informations générales</div>
+        <p class="section-desc">
+          Ces données permettent d'établir le profil socio-démographique de
+          l'élève.
+        </p>
+
+        <div class="fields-grid">
+          <div class="field-group">
+            <label>Genre</label
+            ><!-- dataset: genre (0/1) -->
+            <div class="toggle-group">
+              <button
+                class="toggle-btn"
+                onclick="selectToggle(this, 'genre', 0)"
+              >
+                ♂ Garçon
+              </button>
+              <button
+                class="toggle-btn"
+                onclick="selectToggle(this, 'genre', 1)"
+              >
+                ♀ Fille
+              </button>
+            </div>
+          </div>
+
+          <div class="field-group">
+            <label>Milieu de résidence</label
+            ><!-- dataset: zone (0/1) -->
+            <div class="toggle-group">
+              <button
+                class="toggle-btn"
+                onclick="selectToggle(this, 'zone', 0)"
+              >
+                🌿 Rural
+              </button>
+              <button
+                class="toggle-btn"
+                onclick="selectToggle(this, 'zone', 1)"
+              >
+                🏙 Urbain
+              </button>
+            </div>
+          </div>
+
+          <div class="field-group">
+            <label>Âge de l'élève</label
+            ><!-- dataset: age (11–17) -->
+            <div class="input-suffix">
+              <input
+                type="number"
+                class="num-input"
+                id="age"
+                min="11"
+                max="17"
+                value="13"
+                oninput="setVal('age', this.value)"
+              />
+              <span class="unit">ans</span>
+            </div>
+          </div>
+
+          <div class="field-group">
+            <label>A déjà redoublé ?</label
+            ><!-- dataset: redoublement (0/1) -->
+            <div class="toggle-group">
+              <button
+                class="toggle-btn"
+                onclick="selectToggle(this, 'redoublement', 0)"
+              >
+                Non
+              </button>
+              <button
+                class="toggle-btn"
+                onclick="selectToggle(this, 'redoublement', 1)"
+              >
+                Oui
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="nav-buttons">
+          <span class="step-indicator">Étape 1 / 4</span>
+          <button class="btn btn-primary" onclick="nextStep(2)">
+            Suivant →
+          </button>
+        </div>
+      </div>
+
+      <!-- ── ÉTAPE 2 : Environnement numérique ─────────────── -->
+      <div class="section-card" id="step-2">
+        <div class="section-tag tag-env">💻 Environnement numérique</div>
+        <div class="section-title">Accès et usage des outils informatiques</div>
+        <p class="section-desc">
+          Ces questions évaluent les ressources numériques disponibles pour
+          l'élève à domicile.
+        </p>
+
+        <div class="fields-grid">
+          <div class="field-group">
+            <label>Ordinateur / tablette à domicile ?</label
+            ><!-- dataset: acces_ordinateur (0/1) -->
+            <div class="toggle-group">
+              <button
+                class="toggle-btn"
+                onclick="selectToggle(this, 'acces_ordinateur', 0)"
+              >
+                Non
+              </button>
+              <button
+                class="toggle-btn"
+                onclick="selectToggle(this, 'acces_ordinateur', 1)"
+              >
+                Oui
+              </button>
+            </div>
+          </div>
+
+          <div class="field-group">
+            <label>Accès internet à domicile ?</label
+            ><!-- dataset: acces_internet (0/1) -->
+            <div class="toggle-group">
+              <button
+                class="toggle-btn"
+                onclick="selectToggle(this, 'acces_internet', 0)"
+              >
+                Non
+              </button>
+              <button
+                class="toggle-btn"
+                onclick="selectToggle(this, 'acces_internet', 1)"
+              >
+                Oui
+              </button>
+            </div>
+          </div>
+
+          <div class="field-group field-full">
+            <label>Fréquence d'utilisation de l'ordinateur</label
+            ><!-- dataset: frequence_utilisation_pc (0=Jamais → 4=Très fréquent) -->
+            <div class="scale-group">
+              <button
+                class="scale-btn"
+                onclick="selectScale(this, 'frequence_utilisation_pc', 0)"
+              >
+                0<span>Jamais</span>
+              </button>
+              <button
+                class="scale-btn"
+                onclick="selectScale(this, 'frequence_utilisation_pc', 1)"
+              >
+                1<span>Rarement</span>
+              </button>
+              <button
+                class="scale-btn"
+                onclick="selectScale(this, 'frequence_utilisation_pc', 2)"
+              >
+                2<span>Parfois</span>
+              </button>
+              <button
+                class="scale-btn"
+                onclick="selectScale(this, 'frequence_utilisation_pc', 3)"
+              >
+                3<span>Souvent</span>
+              </button>
+              <button
+                class="scale-btn"
+                onclick="selectScale(this, 'frequence_utilisation_pc', 4)"
+              >
+                4<span>Très fréquent</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="field-group field-full">
+            <label
+              >Niveau de maîtrise des outils informatiques
+              (auto-évaluation)</label
+            ><!-- dataset: connaissance_pc (0=Très faible → 4=Élevé) -->
+            <div class="scale-group">
+              <button
+                class="scale-btn"
+                onclick="selectScale(this, 'connaissance_pc', 0)"
+              >
+                0<span>Très faible</span>
+              </button>
+              <button
+                class="scale-btn"
+                onclick="selectScale(this, 'connaissance_pc', 1)"
+              >
+                1<span>Faible</span>
+              </button>
+              <button
+                class="scale-btn"
+                onclick="selectScale(this, 'connaissance_pc', 2)"
+              >
+                2<span>Moyen</span>
+              </button>
+              <button
+                class="scale-btn"
+                onclick="selectScale(this, 'connaissance_pc', 3)"
+              >
+                3<span>Bon</span>
+              </button>
+              <button
+                class="scale-btn"
+                onclick="selectScale(this, 'connaissance_pc', 4)"
+              >
+                4<span>Élevé</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="nav-buttons">
+          <button class="btn btn-ghost" onclick="prevStep(1)">← Retour</button>
+          <span class="step-indicator">Étape 2 / 4</span>
+          <button class="btn btn-primary" onclick="nextStep(3)">
+            Suivant →
+          </button>
+        </div>
+      </div>
+
+      <!-- ── ÉTAPE 3 : Résultats académiques ───────────────── -->
+      <div class="section-card" id="step-3">
+        <div class="section-tag tag-academic">📊 Résultats académiques</div>
+        <div class="section-title">
+          Performances scolaires (année précédente)
+        </div>
+        <p class="section-desc">
+          Ces informations sont extraites du bulletin scolaire de l'élève de
+          l'année passée.
+        </p>
+
+        <div class="fields-grid">
+          <div class="field-group">
+            <label>Moyenne en mathématiques</label
+            ><!-- dataset: moy_math (0–20) -->
+            <div class="input-suffix">
+              <input
+                type="number"
+                class="num-input"
+                id="moy_math"
+                min="0"
+                max="20"
+                step="0.5"
+                placeholder="Ex: 12.5"
+                oninput="setVal('moy_math', this.value)"
+              />
+              <span class="unit">/ 20</span>
+            </div>
+          </div>
+
+          <div class="field-group">
+            <label>Moyenne générale</label
+            ><!-- dataset: moy_generale (0–20) -->
+            <div class="input-suffix">
+              <input
+                type="number"
+                class="num-input"
+                id="moy_generale"
+                min="0"
+                max="20"
+                step="0.5"
+                placeholder="Ex: 11.0"
+                oninput="setVal('moy_generale', this.value)"
+              />
+              <span class="unit">/ 20</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top: 24px">
+          <div class="section-tag tag-test">🧪 Test diagnostique</div>
+          <div
+            class="section-title"
+            style="font-size: 0.95rem; margin-bottom: 4px"
+          >
+            Résultats obtenus au test diagnostique passé avant le début des
+            cours
+          </div>
+          <p class="section-desc">
+            Scores obtenus lors du test diagnostique initial.
+          </p>
+
+          <div class="fields-grid">
+            <div class="field-group">
+              <label>Score raisonnement logique</label
+              ><!-- dataset: score_logique (0–10) -->
+              <div class="input-suffix">
+                <input
+                  type="number"
+                  class="num-input"
+                  id="score_logique"
+                  min="0"
+                  max="10"
+                  step="0.5"
+                  placeholder="Ex: 6"
+                  oninput="setVal('score_logique', this.value)"
+                />
+                <span class="unit">/ 10</span>
+              </div>
+            </div>
+
+            <div class="field-group">
+              <label>Score algorithmique</label
+              ><!-- dataset: score_algo (0–10) -->
+              <div class="input-suffix">
+                <input
+                  type="number"
+                  class="num-input"
+                  id="score_algo"
+                  min="0"
+                  max="10"
+                  step="0.5"
+                  placeholder="Ex: 5"
+                  oninput="setVal('score_algo', this.value)"
+                />
+                <span class="unit">/ 10</span>
+              </div>
+            </div>
+
+            <div class="field-group">
+              <label>Temps moyen de résolution</label
+              ><!-- dataset: temps_resolution (minutes) -->
+              <div class="input-suffix">
+                <input
+                  type="number"
+                  class="num-input"
+                  id="temps_resolution"
+                  min="1"
+                  max="60"
+                  placeholder="Ex: 18"
+                  oninput="setVal('temps_resolution', this.value)"
+                />
+                <span class="unit">min</span>
+              </div>
+            </div>
+
+            <div class="field-group">
+              <label>Nombre total d'erreurs</label
+              ><!-- dataset: nb_erreurs (valeur entière) -->
+              <div class="input-suffix">
+                <input
+                  type="number"
+                  class="num-input"
+                  id="nb_erreurs"
+                  min="0"
+                  max="30"
+                  placeholder="Ex: 4"
+                  oninput="setVal('nb_erreurs', this.value)"
+                />
+                <span class="unit">erreurs</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="nav-buttons">
+          <button class="btn btn-ghost" onclick="prevStep(2)">← Retour</button>
+          <span class="step-indicator">Étape 3 / 4</span>
+          <button class="btn btn-primary" onclick="nextStep(4)">
+            Suivant →
+          </button>
+        </div>
+      </div>
+
+      <!-- ── ÉTAPE 4 : Comportement & Motivation ───────────── -->
+      <div class="section-card" id="step-4">
+        <div class="section-tag tag-behavior">🧠 Comportement observé</div>
+        <div class="section-title">
+          Observations durant le test diagnostique
+        </div>
+        <p class="section-desc">
+          Ces données sont renseignées par l'enseignant sur la base de ses
+          observations directes.
+        </p>
+
+        <div class="fields-grid">
+          <div class="field-group field-full">
+            <label>Niveau de concentration</label
+            ><!-- dataset: concentration (1=Très faible → 5=Très bonne) -->
+            <div class="scale-group">
+              <button
+                class="scale-btn"
+                onclick="selectScale(this, 'concentration', 1)"
+              >
+                1<span>Très faible</span>
+              </button>
+              <button
+                class="scale-btn"
+                onclick="selectScale(this, 'concentration', 2)"
+              >
+                2<span>Faible</span>
+              </button>
+              <button
+                class="scale-btn"
+                onclick="selectScale(this, 'concentration', 3)"
+              >
+                3<span>Moyenne</span>
+              </button>
+              <button
+                class="scale-btn"
+                onclick="selectScale(this, 'concentration', 4)"
+              >
+                4<span>Bonne</span>
+              </button>
+              <button
+                class="scale-btn"
+                onclick="selectScale(this, 'concentration', 5)"
+              >
+                5<span>Très bonne</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="field-group field-full">
+            <label>Capacité à travailler seul (autonomie)</label><!-- dataset: autonomie (1=Faible → 5=Élevée) -->
+            <div class="scale-group">
+              <button
+                class="scale-btn"
+                onclick="selectScale(this, 'autonomie', 1)"
+              >
+                1<span>Faible</span>
+              </button>
+              <button
+                class="scale-btn"
+                onclick="selectScale(this, 'autonomie', 2)"
+              >
+                2<span></span>
+              </button>
+              <button
+                class="scale-btn"
+                onclick="selectScale(this, 'autonomie', 3)"
+              >
+                3<span>Moyenne</span>
+              </button>
+              <button
+                class="scale-btn"
+                onclick="selectScale(this, 'autonomie', 4)"
+              >
+                4<span></span>
+              </button>
+              <button
+                class="scale-btn"
+                onclick="selectScale(this, 'autonomie', 5)"
+              >
+                5<span>Élevée</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="field-group field-full">
+            <label>Niveau de participation</label
+            ><!-- dataset: participation (1=Faible → 5=Active) -->
+            <div class="scale-group">
+              <button
+                class="scale-btn"
+                onclick="selectScale(this, 'participation', 1)"
+              >
+                1<span>Faible</span>
+              </button>
+              <button
+                class="scale-btn"
+                onclick="selectScale(this, 'participation', 2)"
+              >
+                2<span></span>
+              </button>
+              <button
+                class="scale-btn"
+                onclick="selectScale(this, 'participation', 3)"
+              >
+                3<span>Normale</span>
+              </button>
+              <button
+                class="scale-btn"
+                onclick="selectScale(this, 'participation', 4)"
+              >
+                4<span></span>
+              </button>
+              <button
+                class="scale-btn"
+                onclick="selectScale(this, 'participation', 5)"
+              >
+                5<span>Active</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top: 24px">
+          <div class="section-tag tag-motivation">⭐ Motivation</div>
+          <div
+            class="section-title"
+            style="font-size: 0.95rem; margin-bottom: 4px"
+          >
+            Auto-évaluation par questionnaire
+          </div>
+          <p class="section-desc">
+            Ces données sont recueillies via questionnaire auprès de l'élève.
+          </p>
+
+          <div class="fields-grid">
+            <div class="field-group field-full">
+              <label>Motivation envers l'apprentissage de l'informatique</label
+              ><!-- dataset: motivation (1=Très faible → 5=Très élevée) -->
+              <div class="scale-group">
+                <button
+                  class="scale-btn"
+                  onclick="selectScale(this, 'motivation', 1)"
+                >
+                  1<span>Très faible</span>
+                </button>
+                <button
+                  class="scale-btn"
+                  onclick="selectScale(this, 'motivation', 2)"
+                >
+                  2<span>Faible</span>
+                </button>
+                <button
+                  class="scale-btn"
+                  onclick="selectScale(this, 'motivation', 3)"
+                >
+                  3<span>Moyenne</span>
+                </button>
+                <button
+                  class="scale-btn"
+                  onclick="selectScale(this, 'motivation', 4)"
+                >
+                  4<span>Élevée</span>
+                </button>
+                <button
+                  class="scale-btn"
+                  onclick="selectScale(this, 'motivation', 5)"
+                >
+                  5<span>Très élevée</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="field-group field-full">
+              <label>Niveau d'appréhension face à l'informatique</label
+              ><!-- dataset: apprehension (1=Aucune → 5=Très forte) -->
+              <div class="scale-group">
+                <button
+                  class="scale-btn"
+                  onclick="selectScale(this, 'apprehension', 1)"
+                >
+                  1<span>Aucune</span>
+                </button>
+                <button
+                  class="scale-btn"
+                  onclick="selectScale(this, 'apprehension', 2)"
+                >
+                  2<span>Légère</span>
+                </button>
+                <button
+                  class="scale-btn"
+                  onclick="selectScale(this, 'apprehension', 3)"
+                >
+                  3<span>Modérée</span>
+                </button>
+                <button
+                  class="scale-btn"
+                  onclick="selectScale(this, 'apprehension', 4)"
+                >
+                  4<span>Forte</span>
+                </button>
+                <button
+                  class="scale-btn"
+                  onclick="selectScale(this, 'apprehension', 5)"
+                >
+                  5<span>Très forte</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="nav-buttons">
+          <button class="btn btn-ghost" onclick="prevStep(3)">← Retour</button>
+          <span class="step-indicator">Étape 4 / 4</span>
+          <button class="btn btn-success" onclick="submitForm()">
+            🔍 Analyser l'apprenant
+          </button>
+        </div>
+      </div>
+
+      
+      <footer class="about-footer">
+        © 2026 - DiagnoLearn | Projet PPE CRMEF - Réalisé par Safaa Brouk, sous
+        l'encadrement de M. Housni Mohamed.
+      </footer>
+
+    </div>
+
+    <!-- ─── PANNEAU DE RÉSULTAT ─────────────────────────────── -->
+    <div id="result-panel">
+      <!-- En-tête résultat -->
+      <div class="result-header" id="result-header">
+        <span class="result-emoji" id="result-emoji">🔍</span>
+        <div class="risk-badge" id="risk-badge">Analyse en cours...</div>
+        <div class="result-prob" id="result-prob">—</div>
+        <div class="result-prob-label">
+          Probabilité de difficultés en informatique
+        </div>
+        <div class="prob-bar">
+          <div class="prob-track">
+            <div class="prob-fill" id="prob-fill"></div>
+          </div>
+        </div>
+        <div style="font-size: 0.8rem; color: var(--text-muted)">
+          Modèle utilisé :
+          <strong style="color: var(--accent)">Random Forest</strong> · F1-score
+          : <strong>0.867</strong> · Recall : <strong>0.897</strong>
+        </div>
+      </div>
+
+      <!-- Grille facteurs + recommandations -->
+      <div class="result-grid">
+        <div class="factors-card">
+          <div class="card-title">⚠️ Facteurs de risque identifiés</div>
+          <div id="factors-list"></div>
+        </div>
+
+        <div class="factors-card" id="model-info-card">
+          <div class="card-title">📈 Indicateurs clés du modèle</div>
+          <div id="model-info"></div>
+        </div>
+
+        <div class="reco-card">
+          <div class="card-title">
+            💡 Recommandations pédagogiques
+            <span
+              style="
+                font-size: 0.7rem;
+                color: var(--text-muted);
+                font-weight: 400;
+                margin-left: 8px;
+              "
+              id="reco-source"
+            ></span>
+          </div>
+          <div id="reco-list">
+            <div style="color: var(--text-muted); font-size: 0.85rem">
+              Chargement des recommandations...
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="result-actions">
+        <button class="btn btn-ghost" onclick="resetForm()">
+          ← Nouveau diagnostic
+        </button>
+        <button class="btn btn-primary" onclick="window.print()">
+          🖨️ Imprimer le rapport
+        </button>
+        <a href="/dashboard" class="btn btn-ghost">📊 Voir les modèles ML</a>
+      </div>
+    </div>
+
+    <!-- ─── LOADING ──────────────────────────────────────────── -->
+    <div id="loading-overlay">
+      <div class="spinner"></div>
+      <div class="loading-text" id="loading-text">Analyse en cours...</div>
+    </div>
+    
+    <script>
+            /* ═══════════════════════════════════════════════════════ ÉTAT DU FORMULAIRE ═══════════════════════════════════════════════════════ */
+            // Valeurs par défaut basées sur les moyennes du dataset
+            const formData = {
+              genre: null,
+              age: 13,
+              redoublement: null,
+              zone: null,
+              acces_ordinateur: null,
+              acces_internet: null,
+              frequence_utilisation_pc: null,
+              connaissance_pc: null,
+              moy_math: null,
+              moy_generale: null,
+              score_logique: null,
+              score_algo: null,
+              temps_resolution: null,
+              nb_erreurs: null,
+              concentration: null,
+              autonomie: null,
+              motivation: null,
+              apprehension: null,
+              participation: null,
+            };
+
+            let currentStep = 1;
+
+            const iconPaths = {
+              user: '<path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="7" r="4"/>',
+              calendar:
+                '<path d="M8 2v4"/><path d="M16 2v4"/><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18"/>',
+              home: '<path d="M3 11.5 12 4l9 7.5"/><path d="M5 10.5V20h14v-9.5"/>',
+              refresh:
+                '<path d="M20 11a8 8 0 0 0-14.6-4.5L3 9"/><path d="M3 4v5h5"/><path d="M4 13a8 8 0 0 0 14.6 4.5L21 15"/><path d="M21 20v-5h-5"/>',
+              monitor:
+                '<rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/>',
+              wifi: '<path d="M5 12.5a10 10 0 0 1 14 0"/><path d="M8.5 16a5 5 0 0 1 7 0"/><path d="M12 19h.01"/>',
+              activity: '<path d="M3 12h4l3-7 4 14 3-7h4"/>',
+              brain:
+                '<path d="M8 6a3 3 0 0 1 6 0v12"/><path d="M14 6a3 3 0 0 1 6 0 3 3 0 0 1-1.2 2.4A4 4 0 0 1 17 16h-3"/><path d="M8 6a3 3 0 0 0-6 0 3 3 0 0 0 1.2 2.4A4 4 0 0 0 5 16h3"/>',
+              graduation:
+                '<path d="M22 10 12 5 2 10l10 5z"/><path d="M6 12v5c3 2 9 2 12 0v-5"/><path d="M22 10v6"/>',
+              chart:
+                '<path d="M4 19V5"/><path d="M4 19h16"/><path d="M8 16v-4"/><path d="M12 16V8"/><path d="M16 16v-6"/>',
+              target:
+                '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><path d="M12 12h.01"/>',
+              clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+              alert:
+                '<path d="M10.3 3.9 2.6 17.4A2 2 0 0 0 4.3 20h15.4a2 2 0 0 0 1.7-2.6L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/>',
+              focus: '<circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/>',
+              star: '<path d="m12 3 2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/>',
+            };
+
+            const fieldIcons = {
+              genre: "user",
+              age: "calendar",
+              redoublement: "refresh",
+              zone: "home",
+              acces_ordinateur: "monitor",
+              acces_internet: "wifi",
+              frequence_utilisation_pc: "activity",
+              connaissance_pc: "brain",
+              moy_math: "graduation",
+              moy_generale: "chart",
+              score_logique: "target",
+              score_algo: "chart",
+              temps_resolution: "clock",
+              nb_erreurs: "alert",
+              concentration: "focus",
+              autonomie: "user",
+              motivation: "star",
+              apprehension: "brain",
+              participation: "activity",
+            };
+
+            function iconSvg(name) {
+              return `<svg viewBox="0 0 24 24" aria-hidden="true">${iconPaths[name] || iconPaths.target}</svg>`;
+            }
+
+            function addFieldIcons() {
+              Object.entries(fieldIcons).forEach(([field, icon]) => {
+                const group = getFieldGroup(field);
+                if (!group) return;
+
+                const inputWrap = group.querySelector(".input-suffix");
+                if (inputWrap && !inputWrap.querySelector(".field-input-icon")) {
+                  inputWrap.classList.add("has-icon");
+                  inputWrap.insertAdjacentHTML(
+                    "afterbegin",
+                    `<span class="field-input-icon">${iconSvg(icon)}</span>`,
+                  );
+                  return;
+                }
+
+                if (!group.querySelector(".field-choice-icon")) {
+                  const label = group.querySelector("label");
+                  if (label)
+                    label.insertAdjacentHTML(
+                      "afterbegin",
+                      `<span class="field-choice-icon">${iconSvg(icon)}</span>`,
+                    );
+                }
+              });
+            }
+
+            /* ═══════════════════════════════════════════════════════ NAVIGATION ENTRE ÉTAPES ═══════════════════════════════════════════════════════ */
+            function nextStep(step) {
+              // Validation basique avant de passer à l'étape suivante
+              if (!validateStep(currentStep)) return;
+
+              document
+                .getElementById(`step-${currentStep}`)
+                .classList.remove("active");
+              document.getElementById(`step-${step}`).classList.add("active");
+
+              // Mise à jour des indicateurs de progression
+              document
+                .getElementById(`step-${currentStep}-dot`)
+                .classList.remove("active");
+              document
+                .getElementById(`step-${currentStep}-dot`)
+                .classList.add("done");
+              document.getElementById(`step-${step}-dot`).classList.add("active");
+
+              currentStep = step;
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }
+
+            function prevStep(step) {
+              document
+                .getElementById(`step-${currentStep}`)
+                .classList.remove("active");
+              document.getElementById(`step-${step}`).classList.add("active");
+              document
+                .getElementById(`step-${currentStep}-dot`)
+                .classList.remove("active");
+              document.getElementById(`step-${step}-dot`).classList.remove("done");
+              document.getElementById(`step-${step}-dot`).classList.add("active");
+              currentStep = step;
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }
+
+            function goToStep(step) {
+              if (step < currentStep) prevStep(step);
+            }
+
+            const requiredByStep = {
+              1: ["genre", "zone", "redoublement"],
+              2: [
+                "acces_ordinateur",
+                "acces_internet",
+                "frequence_utilisation_pc",
+                "connaissance_pc",
+              ],
+              3: [
+                "moy_math",
+                "moy_generale",
+                "score_logique",
+                "score_algo",
+                "temps_resolution",
+                "nb_erreurs",
+              ],
+              4: [
+                "concentration",
+                "autonomie",
+                "participation",
+                "motivation",
+                "apprehension",
+              ],
+            };
+
+            const fieldRules = {
+              genre: { label: "Genre" },
+              zone: { label: "Milieu de résidence" },
+              redoublement: { label: "Redoublement" },
+              acces_ordinateur: { label: "Accès à un ordinateur" },
+              acces_internet: { label: "Accès internet" },
+              frequence_utilisation_pc: {
+                label: "Fréquence d'utilisation",
+                min: 0,
+                max: 4,
+              },
+              connaissance_pc: {
+                label: "Maîtrise des outils informatiques",
+                min: 0,
+                max: 4,
+              },
+              moy_math: { label: "Moyenne en mathématiques", min: 0, max: 20 },
+              moy_generale: { label: "Moyenne générale", min: 0, max: 20 },
+              score_logique: { label: "Score raisonnement logique", min: 0, max: 10 },
+              score_algo: { label: "Score algorithmique", min: 0, max: 10 },
+              temps_resolution: { label: "Temps de résolution", min: 1, max: 60 },
+              nb_erreurs: { label: "Nombre d'erreurs", min: 0, max: 30 },
+              concentration: { label: "Concentration", min: 1, max: 5 },
+              autonomie: { label: "Autonomie", min: 1, max: 5 },
+              participation: { label: "Participation", min: 1, max: 5 },
+              motivation: { label: "Motivation", min: 1, max: 5 },
+              apprehension: { label: "Appréhension", min: 1, max: 5 },
+            };
+
+            function getFieldGroup(field) {
+              const control =
+                document.getElementById(field) ||
+                document.querySelector(`[onclick*="'${field}'"]`);
+              return control ? control.closest(".field-group") : null;
+            }
+
+            function setFieldState(field, isValid, message = "") {
+              const group = getFieldGroup(field);
+              if (!group) return;
+              let error = group.querySelector(".field-error");
+              if (!error) {
+                error = document.createElement("div");
+                error.className = "field-error";
+                group.appendChild(error);
+              }
+              group.classList.toggle("has-error", !isValid);
+              group.classList.toggle("is-valid", isValid);
+              error.textContent = message;
+            }
+
+            function validateField(field, silent = false) {
+              const value = formData[field];
+              const rule = fieldRules[field] || { label: field };
+
+              if (value === null || value === "" || Number.isNaN(value)) {
+                if (!silent)
+                  setFieldState(field, false, `${rule.label} est obligatoire.`);
+                return false;
+              }
+
+              if (
+                typeof rule.min === "number" &&
+                (Number(value) < rule.min || Number(value) > rule.max)
+              ) {
+                if (!silent)
+                  setFieldState(
+                    field,
+                    false,
+                    `Valeur invalide : saisissez une valeur entre ${rule.min} et ${rule.max}.`,
+                  );
+                return false;
+              }
+
+              if (!silent) setFieldState(field, true);
+              return true;
+            }
+
+            /* Validation professionnelle de chaque étape */
+            function validateStep(step) {
+              const fields = requiredByStep[step] || [];
+              const invalid = fields.filter((k) => !validateField(k));
+              if (invalid.length > 0) {
+                const firstInvalid = getFieldGroup(invalid[0]);
+                if (firstInvalid)
+                  firstInvalid.scrollIntoView({
+                    behavior: "smooth",
+                    block: "center",
+                  });
+                return false;
+              }
+              return true;
+            }
+
+            /* ═══════════════════════════════════════════════════════ GESTION DES INPUTS ═══════════════════════════════════════════════════════ */
+            function selectToggle(btn, field, value) {
+              // Déselectionner les frères
+              btn
+                .closest(".toggle-group")
+                .querySelectorAll(".toggle-btn")
+                .forEach((b) => b.classList.remove("selected"));
+              btn.classList.add("selected");
+              formData[field] = value;
+              validateField(field);
+            }
+
+            function selectScale(btn, field, value) {
+              btn
+                .closest(".scale-group")
+                .querySelectorAll(".scale-btn")
+                .forEach((b) => b.classList.remove("selected"));
+              btn.classList.add("selected");
+              formData[field] = value;
+              validateField(field);
+            }
+
+            function setVal(field, value) {
+              formData[field] = value === "" ? null : parseFloat(value);
+              validateField(field);
+            }
+
+            // Initialiser l'âge
+            setVal("age", 13);
+            addFieldIcons();
+
+            /* ═══════════════════════════════════════════════════════ SOUMISSION DU FORMULAIRE ═══════════════════════════════════════════════════════ */
+            async function submitForm() {
+              for (let step = 1; step <= 4; step++) {
+                if (!validateStep(step)) {
+                  if (step !== currentStep) goToStep(step);
+                  return;
+                }
+              }
+
+              // Afficher l'overlay de chargement
+              const overlay = document.getElementById("loading-overlay");
+              const loadingText = document.getElementById("loading-text");
+              overlay.classList.add("show");
+
+              try {
+                // ── Étape 1 : Prédiction ML ──────────────────────────
+                loadingText.textContent = "Analyse par Random Forest...";
+                const predResponse = await fetch("/predict", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify(formData),
+                });
+                const predResult = await predResponse.json();
+
+                if (predResult.error) throw new Error(predResult.error);
+
+                // ── Étape 2 : Recommandations IA ─────────────────────
+                loadingText.textContent = "Génération des recommandations...";
+                const recoResponse = await fetch("/recommend", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    risk_level: predResult.risk_level,
+                    risk_factors: predResult.risk_factors,
+                    profile: formData,
+                  }),
+                });
+                const recoResult = await recoResponse.json();
+
+                overlay.classList.remove("show");
+
+                // ── Affichage des résultats ───────────────────────────
+                displayResults(predResult, recoResult);
+              } catch (error) {
+                overlay.classList.remove("show");
+                alert("Erreur lors de l'analyse : " + error.message);
+              }
+            }
+
+            /* ═══════════════════════════════════════════════════════ AFFICHAGE DES RÉSULTATS ═══════════════════════════════════════════════════════ */
+            function displayResults(pred, reco) {
+              // Masquer le formulaire, afficher le panneau résultat
+              document.getElementById("form-container").style.display = "none";
+              const panel = document.getElementById("result-panel");
+              panel.style.display = "block";
+              window.scrollTo({ top: 0, behavior: "smooth" });
+
+              // ── Niveau de risque ──────────────────────────────────
+              const emojis = { low: "✅", medium: "⚠️", high: "🔴" };
+              document.getElementById("result-emoji").textContent =
+                emojis[pred.risk_level];
+
+              const badge = document.getElementById("risk-badge");
+              badge.textContent = pred.risk_label;
+              badge.className = `risk-badge risk-${pred.risk_level}`;
+
+              document.getElementById("result-prob").textContent =
+                pred.probability + "%";
+              document.getElementById("result-prob").style.color = pred.risk_color;
+
+              // Barre de progression animée
+              const fill = document.getElementById("prob-fill");
+              fill.style.background = `linear-gradient(90deg, ${pred.risk_color}88, ${pred.risk_color})`;
+              setTimeout(() => {
+                fill.style.width = pred.probability + "%";
+              }, 100);
+
+              // Teinte de fond du header
+              const header = document.getElementById("result-header");
+              header.style.setProperty("--result-color", pred.risk_color + "18");
+
+              // ── Facteurs de risque ────────────────────────────────
+              const factorsList = document.getElementById("factors-list");
+              if (pred.risk_factors && pred.risk_factors.length > 0) {
+                factorsList.innerHTML = pred.risk_factors
+                  .map(
+                    (f) => `
+            <div class="factor-item">
+              <div class="factor-dot ${f.severity}"></div>
+              <div>
+                <div class="factor-text">${f.factor}</div>
+                <div class="factor-val">Valeur : ${f.value}</div>
+              </div>
+            </div>
+          `,
+                  )
+                  .join("");
+              } else {
+                factorsList.innerHTML =
+                  '<div style="color:var(--green);font-size:0.85rem;">✅ Aucun facteur de risque critique détecté.</div>';
+              }
+
+              // ── Informations modèle ───────────────────────────────
+              document.getElementById("model-info").innerHTML = `
+          <div class="factor-item">
+            <div class="factor-dot medium"></div>
+            <div><div class="factor-text">Accuracy</div><div class="factor-val">85.71%</div></div>
+          </div>
+          <div class="factor-item">
+            <div class="factor-dot medium"></div>
+            <div><div class="factor-text">F1-Score</div><div class="factor-val">86.67%</div></div>
+          </div>
+          <div class="factor-item">
+            <div class="factor-dot medium"></div>
+            <div><div class="factor-text">Recall</div><div class="factor-val">89.66%</div></div>
+          </div>
+          <div class="factor-item">
+            <div class="factor-dot low"></div>
+            <div><div class="factor-text">Feature principale</div><div class="factor-val">Score algorithmique (17.8%)</div></div>
+          </div>
+        `;
+
+              // ── Recommandations ───────────────────────────────────
+              const recoList = document.getElementById("reco-list");
+              const source = document.getElementById("reco-source");
+
+              if (reco.source === "gemini") {
+                source.textContent = "🤖 Powered by Gemini AI";
+              } else {
+                source.textContent = "📚 Recommandations expertes";
+              }
+
+              if (reco.recommendations && reco.recommendations.length > 0) {
+                recoList.innerHTML = reco.recommendations
+                  .map(
+                    (r, i) => `
+            <div class="reco-item">
+              <div class="reco-num">${i + 1}</div>
+              <div class="reco-content">
+                <h4>${r.titre}</h4>
+                <p>${r.description}</p>
+                <span class="reco-priority ${r.priorite}">${r.priorite}</span>
+              </div>
+            </div>
+          `,
+                  )
+                  .join("");
+              } else {
+                recoList.innerHTML =
+                  '<div style="color:var(--text-muted);">Recommandations non disponibles.</div>';
+              }
+            }
+
+            /* ═══════════════════════════════════════════════════════ RESET ═══════════════════════════════════════════════════════ */
+            function resetForm() {
+              location.reload();
+            }
+    </script>
+  </body>
+</html>
