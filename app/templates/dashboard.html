@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="fr">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>DiagnoLearn — Comparaison des Modèles ML</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap"
+              rel="stylesheet">
+        <link rel="icon" href="/static/icon.png" type="image/png">
+        <style>
+            :root {
+              --bg: #f7f3ff;
+              --surface: #ffffff;
+              --surface2: #f3edff;
+              --border: rgba(109,40,217,0.12);
+              --text: #21143d;
+              --text-muted: #77658f;
+              --text-dim: #57456f;
+              --accent: #7c3aed;
+              --accent2: #a78bfa;
+              --green: #10b981;
+              --yellow: #f59e0b;
+              --red: #ef4444;
+              --purple: #8b5cf6;
+              --font-display: 'Instrument Sans', sans-serif;
+              --font-body: 'Instrument Sans', sans-serif;
+              --radius: 12px;
+              --radius-lg: 20px;
+            }
+
+            *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+            body {
+              font-family: var(--font-body);
+              background: var(--bg);
+              color: var(--text);
+              min-height: 100vh;
+              padding-left: 280px;
+            }
+
+            body::before {
+              content: '';
+              position: fixed;
+              inset: 0;
+              background:
+                linear-gradient(135deg, rgba(124,58,237,0.08), transparent 45%),
+                radial-gradient(ellipse 80% 50% at 20% 10%, rgba(167,139,250,0.18) 0%, transparent 60%);
+              pointer-events: none;
+            }
+
+            .sidebar {
+              position: fixed;
+              inset: 0 auto 0 0;
+              z-index: 20;
+              width: 280px;
+              padding: 24px 18px;
+              display: flex;
+              flex-direction: column;
+              gap: 28px;
+              background: linear-gradient(180deg, rgba(255,255,255,0.94), rgba(244,237,255,0.92));
+              border-right: 1px solid var(--border);
+              box-shadow: 18px 0 50px rgba(88,28,135,0.08);
+              backdrop-filter: blur(18px);
+            }
+
+            .brand {
+              display: flex;
+              align-items: center;
+              gap: 12px;
+              padding: 4px 8px 16px;
+              border-bottom: 1px solid var(--border);
+            }
+
+            .brand-mark {
+              width: 46px;
+              height: 46px;
+              border-radius: 14px;
+              display: grid;
+              place-items: center;
+              color: #fff;
+              font-weight: 800;
+              background: linear-gradient(135deg, #7c3aed, #c084fc);
+              box-shadow: 0 12px 24px rgba(124,58,237,0.28);
+            }
+
+            .logo {
+              font-family: var(--font-display);
+              font-weight: 800;
+              font-size: 1.25rem;
+              background: linear-gradient(135deg, #5b21b6, #9333ea);
+              -webkit-background-clip: text;
+              -webkit-text-fill-color: transparent;
+            }
+
+            .logo span { font-weight: 400; -webkit-text-fill-color: var(--text-muted); }
+
+            .brand-sub {
+              display: block;
+              margin-top: 2px;
+              font-size: 0.72rem;
+              color: var(--text-muted);
+            }
+
+            .side-nav {
+              display: grid;
+              gap: 12px;
+            }
+
+            .side-nav a {
+              display: flex;
+              align-items: center;
+              gap: 14px;
+              min-height: 56px;
+              padding: 0 16px;
+              border-radius: 16px;
+              color: var(--text-dim);
+              text-decoration: none;
+              font-size: 0.96rem;
+              font-weight: 700;
+              transition: all 0.2s ease;
+              border: 1px solid transparent;
+            }
+            .side-nav a:hover {
+              color: var(--accent);
+              background: rgba(124,58,237,0.09);
+              border-color: rgba(124,58,237,0.12);
+              transform: translateX(3px);
+            }
+            .side-nav a.active {
+              color: #fff;
+              background: linear-gradient(135deg, #7c3aed, #a78bfa);
+              box-shadow: 0 14px 28px rgba(124,58,237,0.22);
+            }
+            .nav-icon {
+              width: 38px;
+              height: 38px;
+              border-radius: 13px;
+              display: grid;
+              place-items: center;
+              background: rgba(124,58,237,0.1);
+              flex: 0 0 38px;
+            }
+            .nav-icon svg {
+              width: 22px;
+              height: 22px;
+              stroke: currentColor;
+              stroke-width: 2;
+              fill: none;
+              stroke-linecap: round;
+              stroke-linejoin: round;
+            }
+            .side-nav a.active .nav-icon { background: rgba(255,255,255,0.2); }
+            .sidebar-footer {
+              margin-top: auto;
+              padding: 14px;
+              border-radius: 16px;
+              background: rgba(124,58,237,0.08);
+              color: var(--text-muted);
+              font-size: 0.78rem;
+              line-height: 1.45;
+            }
+
+            .page-content {
+              position: relative;
+              z-index: 1;
+              max-width: 1000px;
+              margin: 0 auto;
+              padding: 48px 20px 80px;
+            }
+
+            h1 {
+              font-family: var(--font-body);
+              font-size: clamp(1.75rem, 3vw, 2.55rem);
+              font-weight: 700;
+              line-height: 1.22;
+              letter-spacing: 0;
+              margin-bottom: 16px;
+              color: #24133f;
+            }
+
+            h1 em {
+              font-style: normal;
+              color: var(--accent);
+              background: none;
+              -webkit-text-fill-color: currentColor;
+            }
+
+            .page-sub {
+              color: var(--text-muted);
+              font-size: 0.9rem;
+              margin-bottom: 40px;
+            }
+
+            /* ── DASHBOARD SYNTHESIS ── */
+            .dashboard-grid {
+              display: grid;
+              grid-template-columns: repeat(4, 1fr);
+              gap: 16px;
+              margin-bottom: 24px;
+            }
+
+            .summary-card {
+              background: rgba(255,255,255,0.92);
+              border: 1px solid var(--border);
+              border-radius: 18px;
+              padding: 20px;
+              box-shadow: 0 18px 48px rgba(92,45,145,0.11);
+            }
+
+            .summary-icon {
+              width: 42px;
+              height: 42px;
+              border-radius: 14px;
+              display: grid;
+              place-items: center;
+              margin-bottom: 14px;
+              color: var(--accent);
+              background: rgba(124,58,237,0.1);
+            }
+
+            .summary-value {
+              font-family: var(--font-display);
+              font-size: 1.85rem;
+              font-weight: 800;
+              color: var(--text);
+              line-height: 1;
+              margin-bottom: 6px;
+            }
+
+            .summary-label {
+              color: var(--text-muted);
+              font-size: 0.8rem;
+              font-weight: 700;
+              line-height: 1.45;
+            }
+
+            .insight-panel {
+              display: grid;
+              grid-template-columns: 1.15fr 0.85fr;
+              gap: 16px;
+              margin-bottom: 32px;
+            }
+
+            .insight-card {
+              background: var(--surface);
+              border: 1px solid var(--border);
+              border-radius: 18px;
+              padding: 24px;
+              box-shadow: 0 18px 48px rgba(92,45,145,0.12);
+            }
+
+            .insight-title {
+              font-family: var(--font-display);
+              font-size: 1.05rem;
+              font-weight: 800;
+              margin-bottom: 16px;
+            }
+
+            .flow-steps {
+              display: grid;
+              gap: 12px;
+            }
+
+            .flow-step {
+              display: flex;
+              gap: 12px;
+              align-items: flex-start;
+              padding: 14px;
+              border-radius: 14px;
+              background: var(--surface2);
+            }
+
+            .flow-num {
+              width: 28px;
+              height: 28px;
+              border-radius: 10px;
+              display: grid;
+              place-items: center;
+              flex: 0 0 28px;
+              color: #fff;
+              font-size: 0.78rem;
+              font-weight: 800;
+              background: linear-gradient(135deg, var(--accent), var(--accent2));
+            }
+
+            .flow-step strong {
+              display: block;
+              margin-bottom: 3px;
+              font-size: 0.9rem;
+            }
+
+            .flow-step span {
+              color: var(--text-muted);
+              font-size: 0.8rem;
+              line-height: 1.45;
+            }
+
+            .risk-list {
+              display: grid;
+              gap: 12px;
+            }
+
+            .risk-row {
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              gap: 12px;
+              padding: 13px 14px;
+              border-radius: 14px;
+              background: var(--surface2);
+              color: var(--text-dim);
+              font-weight: 700;
+              font-size: 0.86rem;
+            }
+
+            .risk-pill {
+              padding: 5px 10px;
+              border-radius: 999px;
+              font-size: 0.72rem;
+              font-weight: 800;
+            }
+
+            .risk-low { color: var(--green); background: rgba(16,185,129,0.12); }
+            .risk-medium { color: var(--yellow); background: rgba(245,158,11,0.14); }
+            .risk-high { color: var(--red); background: rgba(239,68,68,0.12); }
+
+            .section-heading {
+              margin: 36px 0 18px;
+            }
+
+            .section-heading h2 {
+              font-family: var(--font-display);
+              font-size: 1.55rem;
+              color: var(--text);
+              margin-bottom: 6px;
+            }
+
+            .section-heading p {
+              color: var(--text-muted);
+              font-size: 0.9rem;
+            }
+
+            /* ── WINNER CARD ── */
+            .winner-card {
+              background: linear-gradient(135deg, rgba(124,58,237,0.1), rgba(167,139,250,0.12));
+              border: 1px solid rgba(124,58,237,0.2);
+              border-radius: 18px;
+              padding: 28px 32px;
+              margin-bottom: 32px;
+              display: flex;
+              align-items: center;
+              gap: 24px;
+              box-shadow: 0 18px 48px rgba(92,45,145,0.14);
+            }
+
+            .winner-icon {
+              font-size: 2.5rem;
+              flex-shrink: 0;
+            }
+
+            .winner-title {
+              font-family: var(--font-body);
+              font-size: clamp(1.25rem, 2vw, 1.65rem);
+              line-height: 1.25;
+              font-weight: 700;
+              color: #24133f;
+              margin-bottom: 8px;
+            }
+
+            .winner-title em {
+              font-style: normal;
+              color: var(--accent);
+            }
+
+            .winner-sub { color: var(--text-muted); font-size: 0.85rem; line-height: 1.5; }
+
+            .winner-stats {
+              margin-left: auto;
+              display: flex;
+              gap: 24px;
+              flex-shrink: 0;
+            }
+
+            .winner-stat {
+              text-align: center;
+            }
+
+            .winner-stat-val {
+              font-family: var(--font-display);
+              font-size: 1.6rem;
+              font-weight: 800;
+              color: var(--accent);
+            }
+
+            .winner-stat-label {
+              font-size: 0.7rem;
+              color: var(--text-muted);
+              text-transform: uppercase;
+              letter-spacing: 0.05em;
+            }
+
+            /* ── TABLE ── */
+            .table-card {
+              background: var(--surface);
+              border: 1px solid var(--border);
+              border-radius: 18px;
+              overflow: hidden;
+              margin-bottom: 24px;
+              box-shadow: 0 18px 48px rgba(92,45,145,0.14);
+            }
+
+            .table-header {
+              padding: 20px 24px;
+              border-bottom: 1px solid var(--border);
+            }
+
+            .table-title {
+              font-family: var(--font-display);
+              font-size: 1rem;
+              font-weight: 700;
+            }
+
+            table {
+              width: 100%;
+              border-collapse: collapse;
+            }
+
+            th {
+              padding: 12px 20px;
+              text-align: left;
+              font-size: 0.72rem;
+              font-weight: 700;
+              letter-spacing: 0.06em;
+              text-transform: uppercase;
+              color: var(--text-muted);
+              background: var(--surface2);
+              border-bottom: 1px solid var(--border);
+            }
+
+            td {
+              padding: 14px 20px;
+              font-size: 0.875rem;
+              border-bottom: 1px solid var(--border);
+            }
+
+            tr:last-child td { border-bottom: none; }
+
+            tr.best-row { background: rgba(124,58,237,0.06); }
+
+            .model-name {
+              font-weight: 600;
+              display: flex;
+              align-items: center;
+              gap: 8px;
+            }
+
+            .crown { font-size: 0.9rem; }
+
+            /* Métrique bar */
+            .metric-cell {
+              display: flex;
+              align-items: center;
+              gap: 10px;
+            }
+
+            .metric-bar-track {
+              flex: 1;
+              height: 6px;
+              background: var(--surface2);
+              border-radius: 100px;
+              overflow: hidden;
+            }
+
+            .metric-bar-fill {
+              height: 100%;
+              border-radius: 100px;
+            }
+
+            .metric-val {
+              font-weight: 600;
+              min-width: 44px;
+              text-align: right;
+              font-size: 0.82rem;
+            }
+
+            /* ── FEATURE IMPORTANCE ── */
+            .features-card {
+              background: var(--surface);
+              border: 1px solid var(--border);
+              border-radius: 18px;
+              padding: 24px;
+              margin-bottom: 24px;
+              box-shadow: 0 18px 48px rgba(92,45,145,0.14);
+            }
+
+            .features-title {
+              font-family: var(--font-display);
+              font-size: 1rem;
+              font-weight: 700;
+              margin-bottom: 20px;
+            }
+
+            .feature-row {
+              display: flex;
+              align-items: center;
+              gap: 12px;
+              margin-bottom: 12px;
+            }
+
+            .feature-name {
+              width: 180px;
+              font-size: 0.8rem;
+              font-family: 'Courier New', monospace;
+              color: var(--text-dim);
+              flex-shrink: 0;
+            }
+
+            .feature-track {
+              flex: 1;
+              height: 8px;
+              background: var(--surface2);
+              border-radius: 100px;
+              overflow: hidden;
+            }
+
+            .feature-fill {
+              height: 100%;
+              border-radius: 100px;
+              background: linear-gradient(90deg, var(--accent), var(--accent2));
+              transition: width 1s ease;
+            }
+
+            .feature-pct {
+              font-size: 0.78rem;
+              font-weight: 600;
+              color: var(--text-dim);
+              min-width: 40px;
+              text-align: right;
+            }
+
+            /* ── METHODOLOGY ── */
+            .method-grid {
+              display: grid;
+              grid-template-columns: repeat(3, 1fr);
+              gap: 16px;
+              margin-bottom: 24px;
+            }
+
+            .method-card {
+              background: var(--surface);
+              border: 1px solid var(--border);
+              border-radius: 18px;
+              padding: 20px;
+              box-shadow: 0 18px 48px rgba(92,45,145,0.1);
+            }
+
+            .method-icon { font-size: 1.5rem; margin-bottom: 10px; }
+
+            .method-title {
+              font-family: var(--font-display);
+              font-size: 0.9rem;
+              font-weight: 700;
+              margin-bottom: 6px;
+            }
+
+            /* Footer */
+            .about-footer {
+              margin-top: 48px;
+              padding-top: 20px;
+              text-align: center;
+              font-size: 0.75rem;
+              color: var(--text-muted);
+              border-top: 1px solid var(--border);
+            }
+
+            .method-text { font-size: 0.8rem; color: var(--text-muted); line-height: 1.5; }
+
+            @media (max-width: 640px) {
+              body { padding-left: 0; padding-bottom: 76px; }
+              .sidebar {
+                top: auto;
+                right: 0;
+                width: auto;
+                height: 72px;
+                padding: 8px 10px;
+                border-right: 0;
+                border-top: 1px solid var(--border);
+                box-shadow: 0 -14px 30px rgba(88,28,135,0.12);
+              }
+              .brand, .sidebar-footer { display: none; }
+              .side-nav { grid-template-columns: repeat(4, 1fr); gap: 6px; }
+              .side-nav a {
+                min-height: 56px;
+                padding: 6px 4px;
+                justify-content: center;
+                flex-direction: column;
+                gap: 4px;
+                font-size: 0.68rem;
+                border-radius: 12px;
+              }
+              .nav-icon { width: 24px; height: 24px; border-radius: 8px; flex-basis: 24px; }
+              .nav-icon svg { width: 16px; height: 16px; }
+              .page-content { padding: 34px 14px 80px; }
+              .dashboard-grid, .insight-panel { grid-template-columns: 1fr; }
+              .winner-card, .winner-stats, .method-grid { flex-direction: column; display: flex; }
+              .winner-stats { margin-left: 0; width: 100%; }
+              .table-card { overflow-x: auto; }
+              .feature-row { align-items: flex-start; flex-direction: column; gap: 6px; }
+              .feature-name { width: auto; }
+              .feature-track { width: 100%; }
+            }
+
+            @media (min-width: 641px) and (max-width: 1024px) {
+              body { padding-left: 230px; }
+              .sidebar { width: 230px; }
+              .side-nav a { font-size: 0.86rem; }
+              .winner-card { align-items: flex-start; flex-direction: column; }
+              .winner-stats { margin-left: 0; }
+              .dashboard-grid { grid-template-columns: repeat(2, 1fr); }
+              .insight-panel { grid-template-columns: 1fr; }
+              .method-grid { grid-template-columns: 1fr; }
+            }
+        </style>
+    </head>
+    <body>
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="brand-mark">DL</div>
+                <div>
+                    <div class="logo">
+                        Diagno<span>Learn</span>
+                    </div>
+                </div>
+            </div>
+            <nav class="side-nav" aria-label="Navigation principale">
+                <a href="/dashboard#overview"
+                   {% if page == 'dashboard' %}class="active"{% endif %}><span class="nav-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M4 13h6V4H4z" />
+                        <path d="M14 20h6V4h-6z" />
+                        <path d="M4 20h6v-3H4z" />
+                    </svg>
+                </span><span>Dashboard</span></a>
+                <a href="/"><span class="nav-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M3 11.5 12 4l9 7.5" />
+                        <path d="M5 10.5V20h14v-9.5" />
+                        <path d="M9 20v-6h6v6" />
+                    </svg>
+                </span><span>Accueil</span></a>
+                <a href="/models" {% if page == 'models' %}class="active"{% endif %}><span class="nav-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12 3v18" />
+                        <path d="M5 7h14" />
+                        <path d="M7 7l-3 6h6z" />
+                        <path d="M17 7l-3 6h6z" />
+                        <path d="M8 21h8" />
+                    </svg>
+                </span><span>Modèles entraînés</span></a>
+                <a href="/about"><span class="nav-icon">
+                    <svg viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="9" />
+                        <path d="M12 10v6" />
+                        <path d="M12 7h.01" />
+                    </svg>
+                </span><span>À propos</span></a>
+            </nav>
+            <div class="sidebar-footer">
+                {% if page == 'models' %}
+                    Comparaison des modèles entraînés et variables explicatives.
+                {% else %}
+                    Synthèse pédagogique et suivi des indicateurs du système.
+                {% endif %}
+            </div>
+        </aside>
+        <div class="page-content" id="overview">
+            {% if page == 'models' %}
+                <h1>
+                    Comparaison des <em>Modèles ML</em>
+                </h1>
+                <p class="page-sub">
+                    Entraînement et évaluation sur le dataset de 280 élèves · Split 80/20 · Validation croisée 5-folds
+                </p>
+                <!-- Gagnant -->
+                <div class="winner-card">
+                    <div class="winner-icon">🏆</div>
+                    <div>
+                        <div class="winner-title">
+                            <em>Random Forest</em> — Meilleur modèle sélectionné
+                        </div>
+                        <div class="winner-sub">
+                            Choisi pour son équilibre optimal entre précision, recall et interprétabilité.
+                            <br>
+                            Le recall élevé (89.66%) minimise les faux négatifs — crucial pour ne pas manquer un élève en difficulté.
+                        </div>
+                    </div>
+                    <div class="winner-stats">
+                        <div class="winner-stat">
+                            <div class="winner-stat-val">85.7%</div>
+                            <div class="winner-stat-label">Accuracy</div>
+                        </div>
+                        <div class="winner-stat">
+                            <div class="winner-stat-val">86.7%</div>
+                            <div class="winner-stat-label">F1-Score</div>
+                        </div>
+                        <div class="winner-stat">
+                            <div class="winner-stat-val">89.7%</div>
+                            <div class="winner-stat-label">Recall</div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Tableau de comparaison -->
+                <div class="table-card">
+                    <div class="table-header">
+                        <div class="table-title">📊 Tableau de comparaison — 6 modèles évalués</div>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Modèle</th>
+                                <th>Accuracy</th>
+                                <th>F1-Score</th>
+                                <th>Recall</th>
+                                <th>CV F1 (5-fold)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for name, metrics in results.items() %}
+                                <tr {% if name == 'Random Forest' %}class="best-row"{% endif %}>
+                                    <td>
+                                        <div class="model-name">
+                                            {% if name == 'Random Forest' %}<span class="crown">👑</span>{% endif %}
+                                            {{ name }}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="metric-cell">
+                                            <div class="metric-bar-track">
+                                                <div class="metric-bar-fill"
+                                                     style="width:{{ (metrics.accuracy * 100)|round|int }}%;
+                                                            background:{% if name == 'Random Forest' %}var(--accent){% else %}var(--text-muted){% endif %}">
+                                                </div>
+                                            </div>
+                                            <span class="metric-val"
+                                                  style="color:{% if name == 'Random Forest' %}var(--accent){% else %}var(--text-dim){% endif %}">{{ (metrics.accuracy * 100)|round(1) }}%</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="metric-cell">
+                                            <div class="metric-bar-track">
+                                                <div class="metric-bar-fill"
+                                                     style="width:{{ (metrics.f1 * 100)|round|int }}%;
+                                                            background:{% if name == 'Random Forest' %}var(--green){% else %}var(--text-muted){% endif %}">
+                                                </div>
+                                            </div>
+                                            <span class="metric-val"
+                                                  style="color:{% if name == 'Random Forest' %}var(--green){% else %}var(--text-dim){% endif %}">{{ (metrics.f1 * 100)|round(1) }}%</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="metric-cell">
+                                            <div class="metric-bar-track">
+                                                <div class="metric-bar-fill"
+                                                     style="width:{{ (metrics.recall * 100)|round|int }}%;
+                                                            background:{% if name == 'Random Forest' %}var(--accent2){% else %}var(--text-muted){% endif %}">
+                                                </div>
+                                            </div>
+                                            <span class="metric-val"
+                                                  style="color:{% if name == 'Random Forest' %}var(--accent2){% else %}var(--text-dim){% endif %}">{{ (metrics.recall * 100)|round(1) }}%</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="metric-cell">
+                                            <div class="metric-bar-track">
+                                                <div class="metric-bar-fill"
+                                                     style="width:{{ (metrics.cv_f1 * 100)|round|int }}%;
+                                                            background:var(--purple)"></div>
+                                            </div>
+                                            <span class="metric-val" style="color:var(--purple)">{{ (metrics.cv_f1 * 100)|round(1) }}%</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <!-- Importance des features -->
+                <div class="features-card">
+                    <div class="features-title">🔍 Importance des features — Random Forest</div>
+                    {% set max_imp = 0.1778 %}
+                    {% for feat, imp in importances.items() %}
+                        {% if imp > 0 %}
+                            <div class="feature-row">
+                                <div class="feature-name">{{ feat }}</div>
+                                <div class="feature-track">
+                                    <div class="feature-fill"
+                                         style="width:{{ ((imp / max_imp) * 100)|round|int }}%"></div>
+                                </div>
+                                <div class="feature-pct">{{ (imp * 100)|round(1) }}%</div>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                <!-- Méthodologie -->
+                <div class="method-grid">
+                    <div class="method-card">
+                        <div class="method-icon">📦</div>
+                        <div class="method-title">Dataset</div>
+                        <div class="method-text">
+                            280 élèves · 19 features · 1 variable cible (difficulte_future) · Split 80/20 stratifié · Équilibre classes : 51.4% / 48.6%
+                        </div>
+                    </div>
+                    <div class="method-card">
+                        <div class="method-icon">⚙️</div>
+                        <div class="method-title">Prétraitement</div>
+                        <div class="method-text">
+                            StandardScaler pour la normalisation · Pas de valeurs manquantes détectées · 6 modèles comparés · Validation croisée 5-folds
+                        </div>
+                    </div>
+                    <div class="method-card">
+                        <div class="method-icon">🎯</div>
+                        <div class="method-title">Critère de sélection</div>
+                        <div class="method-text">
+                            Priorité au Recall pour minimiser les faux négatifs. Ne pas rater un élève en difficulté est plus critique qu'une fausse alerte.
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <h1>
+                    Dashboard de <em>suivi pédagogique</em>
+                </h1>
+                <p class="page-sub">
+                    Vue synthétique du système DiagnoLearn : données exploitées, parcours de diagnostic, niveaux de risque et indicateurs clés.
+                </p>
+                <!-- Synthèse dashboard -->
+                <div class="dashboard-grid">
+                    <div class="summary-card">
+                        <div class="summary-icon">👥</div>
+                        <div class="summary-value">280</div>
+                        <div class="summary-label">profils d'élèves dans le dataset</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-icon">🧩</div>
+                        <div class="summary-value">19</div>
+                        <div class="summary-label">variables pédagogiques analysées</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-icon">⚙️</div>
+                        <div class="summary-value">6</div>
+                        <div class="summary-label">modèles entraînés et comparés</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-icon">🎯</div>
+                        <div class="summary-value">89.7%</div>
+                        <div class="summary-label">recall du modèle retenu</div>
+                    </div>
+                </div>
+                <div class="insight-panel">
+                    <div class="insight-card">
+                        <div class="insight-title">Parcours de diagnostic</div>
+                        <div class="flow-steps">
+                            <div class="flow-step">
+                                <div class="flow-num">1</div>
+                                <div>
+                                    <strong>Collecte des informations</strong><span>Profil, accès numérique, résultats scolaires, test diagnostique et observations comportementales.</span>
+                                </div>
+                            </div>
+                            <div class="flow-step">
+                                <div class="flow-num">2</div>
+                                <div>
+                                    <strong>Analyse par le modèle retenu</strong><span>Les données sont normalisées puis évaluées par Random Forest afin d'estimer la probabilité de difficulté.</span>
+                                </div>
+                            </div>
+                            <div class="flow-step">
+                                <div class="flow-num">3</div>
+                                <div>
+                                    <strong>Lecture pédagogique du résultat</strong><span>Le niveau de risque est accompagné de facteurs explicatifs et de recommandations adaptées.</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="insight-card">
+                        <div class="insight-title">Niveaux de risque affichés</div>
+                        <div class="risk-list">
+                            <div class="risk-row">
+                                <span>Risque faible</span><span class="risk-pill risk-low">vert</span>
+                            </div>
+                            <div class="risk-row">
+                                <span>Risque moyen</span><span class="risk-pill risk-medium">orange</span>
+                            </div>
+                            <div class="risk-row">
+                                <span>Risque élevé</span><span class="risk-pill risk-high">rouge</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+            {% endif %}
+            <!-- Footer ajouté ici -->
+            <footer class="about-footer">
+                © 2026 - DiagnoLearn | Projet PPE CRMEF - Réalisé par Safaa Brouk, sous l'encadrement de M. Housni Mohamed.
+            </footer>
+        </div>
+    </body>
+</html>
